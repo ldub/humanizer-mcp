@@ -1,0 +1,16 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "humanizer",
+  "version": "0.1.0",
+  "description": "Rewrite audience-facing copy locally, with a menu bar switch to unload the model.",
+  "author": {"name": "Lev"},
+  "license": "Apache-2.0",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Humanizer",
+        "shortDescription": "Local copy editing with a menu bar on/off switch."
+      }
+    }
+  }
+}

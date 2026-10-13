@@ -1,0 +1,9 @@
+Humanizer MCP, 2026.
+
+Includes humanizer/hz_text.py from sgaofen/humanizer-local-model,
+commit d4f11a8e52a4c668951b0eece6a97f755d0e43bd, under Apache-2.0.
+Its original LICENSE and NOTICE are in src/humanizer_mcp/vendor/.
+
+The prompt_format.json is from jialinyyzz/humanizer, revision
+7232532cb8466bd393544e97826e12e6b5e471ac, under Apache-2.0.
+Model weights are downloaded separately and keep their upstream license and notice.

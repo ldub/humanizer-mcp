@@ -1,0 +1,6 @@
+interface:
+  display_name: "Humanize copy"
+  short_description: "Rewrite app copy and audience-facing drafts with a local model."
+  default_prompt: "Use $humanize-copy to review and humanize this draft before I publish or send it."
+policy:
+  allow_implicit_invocation: true

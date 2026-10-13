@@ -1,0 +1,11 @@
+{
+  "plugin": "humanizer@humanizer-local",
+  "mcp_server": "humanizer",
+  "tools": [
+    "humanizer_status",
+    "humanize_copy"
+  ],
+  "tools_error": null,
+  "skill": "humanizer:humanize-copy",
+  "skill_enabled": true
+}

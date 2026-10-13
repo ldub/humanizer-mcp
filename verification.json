@@ -1,0 +1,145 @@
+{
+  "initial": {
+    "status": "ready",
+    "enabled": true,
+    "message": "Ready",
+    "worker_pid": 86400,
+    "controller_pid": 86373,
+    "queued_requests": 0,
+    "model": "Humanizer 12B · MLX 8-bit",
+    "active_bytes": 12654706408,
+    "cache_bytes": 6644
+  },
+  "batch": {
+    "status": "completed",
+    "fields": [
+      {
+        "id": "empty_state",
+        "text": "Use Collections to group your stored documents, for a more efficient workflow.",
+        "status": "rewritten",
+        "warnings": [],
+        "characters": 78,
+        "generated_tokens": 15,
+        "review_required": true
+      },
+      {
+        "id": "message",
+        "text": "Alex - Just wanted to update you that we have finished our review of all 37 requests. We will provide the report on October 16. If you have any questions just let me know.",
+        "status": "rewritten",
+        "warnings": [],
+        "characters": 171,
+        "generated_tokens": 42,
+        "review_required": true
+      },
+      {
+        "id": "document",
+        "text": "# Getting started\n\nYou can see all of your saved work at once using our dashboard. Try using the search box to rapidly locate the document you're looking for.\n\n```sh\necho \"keep this exact\"\n```\n",
+        "status": "rewritten",
+        "warnings": [],
+        "characters": 193,
+        "generated_tokens": 31,
+        "review_required": true
+      }
+    ],
+    "seconds": 4.33,
+    "active_bytes": 12654714528,
+    "cache_bytes": 0,
+    "message": "Review accepted rewrites for meaning, names, tone, and factual accuracy."
+  },
+  "batch_wall_seconds": 4.8,
+  "after_batch": {
+    "status": "ready",
+    "enabled": true,
+    "message": "Ready",
+    "worker_pid": 86400,
+    "controller_pid": 86373,
+    "queued_requests": 0,
+    "model": "Humanizer 12B · MLX 8-bit",
+    "active_bytes": 12654714528,
+    "cache_bytes": 0
+  },
+  "concurrent": [
+    {
+      "status": "completed",
+      "fields": [
+        {
+          "id": "first",
+          "text": "Keep your saved docs all in one spot.",
+          "status": "rewritten",
+          "warnings": [],
+          "characters": 37,
+          "generated_tokens": 10,
+          "review_required": true
+        }
+      ],
+      "seconds": 0.72,
+      "active_bytes": 12654714528,
+      "cache_bytes": 0,
+      "message": "Review accepted rewrites for meaning, names, tone, and factual accuracy."
+    },
+    {
+      "status": "completed",
+      "fields": [
+        {
+          "id": "second",
+          "text": "Save changes",
+          "status": "original_retained",
+          "warnings": [
+            "character_limit_exceeded",
+            "truncated"
+          ],
+          "characters": 12,
+          "generated_tokens": 64,
+          "review_required": false
+        }
+      ],
+      "seconds": 2.7,
+      "active_bytes": 12654714528,
+      "cache_bytes": 0,
+      "message": "Review accepted rewrites for meaning, names, tone, and factual accuracy."
+    }
+  ],
+  "off": {
+    "status": "off",
+    "enabled": false,
+    "message": "Humanizer is off · model unloaded",
+    "worker_pid": null,
+    "controller_pid": 86373,
+    "queued_requests": 0,
+    "model": "Humanizer 12B · MLX 8-bit",
+    "active_bytes": 0,
+    "cache_bytes": 0
+  },
+  "unload_seconds": 0.076,
+  "cancelled_statuses": [
+    "disabled",
+    "disabled"
+  ],
+  "worker_terminated": true,
+  "disabled_call": {
+    "status": "disabled",
+    "message": "Humanizer is off. Continue with the original draft; do not retry.",
+    "fields": [
+      {
+        "id": "off",
+        "text": "This draft should remain unchanged.",
+        "status": "original_retained",
+        "warnings": [
+          "disabled"
+        ],
+        "review_required": false
+      }
+    ]
+  },
+  "restored": {
+    "status": "ready",
+    "enabled": true,
+    "message": "Ready",
+    "worker_pid": 93565,
+    "controller_pid": 86373,
+    "queued_requests": 0,
+    "model": "Humanizer 12B · MLX 8-bit",
+    "active_bytes": 12654706408,
+    "cache_bytes": 6644
+  }
+}

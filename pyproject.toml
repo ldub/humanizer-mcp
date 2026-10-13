@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "humanizer-mcp"
+version = "0.1.0"
+description = "Local Humanizer with a shared MLX worker, macOS menu bar, and Codex skill"
+requires-python = ">=3.12"
+dependencies = ["mcp>=1.30,<2", "mlx-lm>=0.32,<0.33"]
+
+[project.scripts]
+humanizer-mcp = "humanizer_mcp.server:main"
+humanizer = "humanizer_mcp.cli:main"
+
+[tool.setuptools.package-data]
+humanizer_mcp = ["prompt_format.json", "vendor/LICENSE", "vendor/NOTICE"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+exclude = ["src/humanizer_mcp/vendor"]
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

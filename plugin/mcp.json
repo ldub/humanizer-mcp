@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "humanizer": {
+      "type": "stdio",
+      "command": "sh",
+      "args": ["-c", "exec \"$HOME/Library/Application Support/Humanizer/bin/humanizer-mcp\""]
+    }
+  }
+}
