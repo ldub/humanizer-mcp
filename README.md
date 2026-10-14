@@ -4,6 +4,26 @@ Edit website and app copy, documents, and message drafts with a local model on y
 
 The skill asks your agent to run Humanizer before using copy intended for other people. Ordinary assistant replies and progress updates stay outside that workflow. Skill selection depends on the agent following its instructions; this is not a mandatory interception hook.
 
+## Example
+
+A deliberately overdone, 226-word sample for a fictional team workspace. The Humanizer output is copied verbatim from a local run. It still contains marketing clichés, so review remains necessary.
+
+### Before
+
+> **In today’s hyper-accelerated digital landscape, managing your team's workflow isn't just about ticking boxes—it's about orchestrating a multi-dimensional tapestry of paradigm-shifting priorities.** That’s precisely where our revolutionary ecosystem comes in.
+> It is not a mere tool; it is a holistic workspace. Our cutting-edge, AI-driven platform empowers forward-thinking, agile teams to completely unlock their latent potential by seamlessly—and synergistically—fusing disparate tasks, ad-hoc notes, and cross-functional conversations into a single, beautifully intuitive dashboard.
+> With our workspace, you can effortlessly leverage robust, enterprise-grade organizational capabilities to optimize mission-critical workflows, cultivate hyper-collaborative dynamics, and radically elevate everyday productivity metrics. It is not about working harder—it is about working smarter. Whether you're spearheading a high-stakes, cross-departmental initiative or simply looking to ruthlessly optimize your daily micro-deliverables, our meticulously engineered experience meets you exactly where you are—democratizing data and supporting your unique journey every single step of the way.
+> At its absolute core, our workspace is not just a software solution; it is a fundamental shift in how modern collectives align. By architecting a centralized, single source of truth for shared context and actionable next steps, it actively empowers your team to tune out the noise and laser-focus on what truly drives needle-moving value. It is not just communication—it is connection. Embrace a more cohesive, holistic approach to operational excellence and discover how a little clarity can catalyze a truly monumental transformation.
+
+### Humanizer output
+
+> In today’s exponentially fast-paced digital age, orchestrating the work process flow of your team isn't merely about checking off to-do lists. It's about navigating a complex web of multi-dimensional paradigm-shifting priorities. That’s where our groundbreaking ecosystem is a game-changer.
+> Not just a tool. It's an all-encompassing workspace. Through our next-gen, AI-powered platform, your forward-thinking, agile team can fully unleash hidden potential by seamlessly (and synergistically) integrating disparate tasks, ad-hoc notes, cross-functional dialogues into an elegant, intuitive dashboard.
+> Our workspace lets you effortlessly harness powerful, enterprise-level organizational prowess to supercharge critical mission workflows, foster hyper-collaborative team environments and dramatically boost daily productivity KPIs. It’s not about working harder. It’s about working smarter. From leading a critical cross-departmental initiative to simply optimizing daily micro-outputs with ruthless efficiency, our meticulously crafted experience meets you right where you’re at—leveling the playing field on data and walking with you every step of your unique path.
+> Most importantly, at the absolute heart of our workspace offering isn't just software. It’s a core reimagining of how modern collectives operate. By providing a central, singular source of truth for shared context and actionable next steps, it effectively empowers your team to silence the noise and hyper-focus on creating needle-moving value. It’s not just about communication. It’s about connectivity. Experience a more cohesive, holistic way of operational excellence and see how a bit of clarity can spark a monumental shift.
+
+## Menu bar control
+
 | Enabled, model ready | Disabled, model unloaded |
 | --- | --- |
 | ![Humanizer menu showing Ready and 12.7 GB model memory](docs/images/menu-ready.png) | ![Humanizer menu showing Off and unloaded model memory](docs/images/menu-off.png) |
