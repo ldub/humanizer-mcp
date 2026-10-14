@@ -5,7 +5,7 @@ description: Run local Humanizer when creating or editing website or app copy, d
 
 # Humanize copy
 
-Draft the requested copy, then call this plugin's `humanize_copy` tool before putting it in the final artifact or returning it as a message draft. Submit related pieces together as named fields, up to 16 per call and around 300 words total. Split longer drafts at paragraph boundaries and submit calls sequentially to fit the local time budget.
+Draft the requested copy, then call Humanizer's `humanize_copy` MCP tool before putting it in the final artifact or returning it as a message draft. Submit related pieces together as named fields, up to 16 per call and around 300 words total. Split longer drafts at paragraph boundaries and submit calls sequentially to fit the local time budget.
 
 Use `format: plain` for app strings, headings, and message drafts. Use `format: markdown` for prose in a complete Markdown document. Markdown mode keeps headings, tables, quotations, and code blocks unchanged; submit any headings that need rewriting as separate plain fields. Extract reader-facing strings from source code rather than sending source files, JSX, HTML, or localization dictionaries through the model.
 

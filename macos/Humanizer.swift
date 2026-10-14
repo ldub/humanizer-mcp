@@ -101,8 +101,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(quit)
         statusItem.menu = menu
         startController()
-        timer = Timer.scheduledTimer(withTimeInterval: 4, repeats: true) { [weak self] _ in self?.refresh() }
+        timer = Timer(timeInterval: 4, repeats: true) { [weak self] _ in self?.refresh() }
         timer?.tolerance = 2
+        RunLoop.main.add(timer!, forMode: .common)
     }
 
     func startController() {
@@ -156,6 +157,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             }
         }
     }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        // Opening the app again should reveal its controls, even though it has no windows.
+        // Use the run loop, not a main-queue block, so menu tracking can receive status updates.
+        perform(#selector(showMenu), with: nil, afterDelay: 0)
+        return false
+    }
+
+    @objc func showMenu() { statusItem.button?.performClick(nil) }
 
     func menuWillOpen(_ menu: NSMenu) { refresh() }
 

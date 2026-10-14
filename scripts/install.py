@@ -1,4 +1,4 @@
-"""Install the built app, shared runtime, prepared model, and local Codex plugin."""
+"""Install the shared runtime and menu app, with optional Codex plugin registration."""
 
 import argparse
 import json
@@ -18,6 +18,9 @@ def main():
     parser.add_argument(
         "--codex", type=Path, default=Path("/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex")
     )
+    parser.add_argument(
+        "--skip-codex-plugin", action="store_true", help="Install the service without registering with Codex"
+    )
     args = parser.parse_args()
     repo = Path(__file__).resolve().parents[1]
     source_model = args.model.resolve()
@@ -28,9 +31,11 @@ def main():
     uv = shutil.which("uv")
     if not uv:
         parser.error("Install uv first: https://docs.astral.sh/uv/")
-    codex = str(args.codex) if args.codex.exists() else shutil.which("codex")
-    if not codex:
-        parser.error("Codex CLI was not found. Use --codex PATH.")
+    codex = None
+    if not args.skip_codex_plugin:
+        codex = str(args.codex) if args.codex.exists() else shutil.which("codex")
+        if not codex:
+            parser.error("Codex CLI was not found. Use --codex PATH or --skip-codex-plugin.")
     support = Path.home() / "Library/Application Support/Humanizer"
     app = Path.home() / "Applications/Humanizer.app"
     support.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -102,8 +107,9 @@ def main():
         )
         + "\n"
     )
-    subprocess.run([codex, "plugin", "marketplace", "add", str(marketplace)], check=True)
-    subprocess.run([codex, "plugin", "add", "humanizer@humanizer-local"], check=True)
+    if codex:
+        subprocess.run([codex, "plugin", "marketplace", "add", str(marketplace)], check=True)
+        subprocess.run([codex, "plugin", "add", "humanizer@humanizer-local"], check=True)
     subprocess.run(["/usr/bin/open", "-g", str(app)], check=True)
     print(
         json.dumps(
@@ -112,7 +118,9 @@ def main():
                 "data": str(support),
                 "model": str(model),
                 "cli": str(launcher_dir / "humanizer"),
-                "plugin": "humanizer@humanizer-local",
+                "plugin": "humanizer@humanizer-local" if codex else None,
+                "marketplace": str(marketplace),
+                "mcp": str(launcher_dir / "humanizer-mcp"),
             },
             indent=2,
         )

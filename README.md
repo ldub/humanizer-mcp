@@ -1,57 +1,190 @@
-# Humanizer for Codex
+# Humanizer MCP
 
-Local copy editing for websites, apps, documents, and messages you plan to send. A Codex plugin pairs a skill with an MCP tool; a native macOS menu bar app keeps one MLX model available across chats.
+Edit website and app copy, documents, and message drafts with a local model on your Mac. Humanizer pairs an MCP server with an agent skill and a native menu bar app. One MLX worker serves all connected chats and clients.
 
-Ordinary assistant replies and progress updates are outside the skill's scope. This is an instruction-driven workflow, not an interception hook: Codex selects the skill when the task involves audience-facing copy, sends the draft to Humanizer, and reviews the result before using it.
+The skill asks your agent to run Humanizer before using copy intended for other people. Ordinary assistant replies and progress updates stay outside that workflow. Skill selection depends on the agent following its instructions; this is not a mandatory interception hook.
 
-## Everyday use
+| Enabled, model ready | Disabled, model unloaded |
+| --- | --- |
+| ![Humanizer menu showing Ready and 12.7 GB model memory](docs/images/menu-ready.png) | ![Humanizer menu showing Off and unloaded model memory](docs/images/menu-off.png) |
 
-Open **Humanizer.app** and click its text-bubble menu bar icon. The **Enabled** checkbox is the main control:
+Actual screenshots of the macOS menu app. The memory figure is the worker's reported MLX allocation, not total system RAM.
 
-- **On:** load the model once, then reuse it for successive requests. Requests from different chats are queued through the same worker.
-- **Off:** cancel active and queued rewrites, terminate the model worker, and release its memory. The lightweight menu app and controller remain available.
-- **Quit Humanizer:** turn it off and quit. An MCP connection can reopen the menu app, but the saved Off preference remains Off.
+## Install the local service
 
-The menu shows loading, ready, busy, or off, along with the worker's last reported MLX allocation. It does not estimate system-wide RAM or battery use. Keeping weights resident consumes memory; inference is the main compute cost. No login item is installed.
+You need an Apple Silicon Mac with macOS 14 or later, Xcode Command Line Tools, and [uv](https://docs.astral.sh/uv/getting-started/installation/). This version was tested on macOS 26 with an M4 Max and 128 GB of unified memory. Earlier macOS versions have not been tested. See [verification details](VERIFICATION.md).
 
-After installing the plugin, start a new Codex chat. For example:
-
-> Build a settings page with a friendly empty state and confirmation messages.
-
-The paired skill tells Codex to humanize the app's copy before inserting it. You can also explicitly invoke `humanize-copy` if implicit selection misses it. Turning the menu switch off lets the same task continue with the original drafts.
-
-## Install from source
-
-Requirements: Apple Silicon, macOS 14 or later, Xcode Command Line Tools, `uv`, and a recent Codex with plugin support. The tested configuration is recorded in [VERIFICATION.md](VERIFICATION.md). The initial download and conversion need approximately 40 GB of free disk space; the final 8-bit model is approximately 13 GB. Model preparation is the only step that downloads weights.
-
-From this repository:
+The model alone uses about 13 GB of memory. Leave additional memory for macOS and your other apps. Allow about 40 GB of free disk space for the first download and conversion; the installed model is about 13 GB. Model weights are downloaded separately and are not included in this repository.
 
 ```sh
+# Run once if you do not already have the command line tools.
+xcode-select --install
+
+# After installing uv:
+git clone https://github.com/ldub/humanizer-mcp.git
+cd humanizer-mcp
 uv venv --python 3.12 .venv
 uv pip install --python .venv/bin/python -r requirements.lock
-.venv/bin/python scripts/prepare_model.py --source build/source-model --output build/humanizer-mlx-8bit
+.venv/bin/python scripts/prepare_model.py \
+  --source build/source-model --output build/humanizer-mlx-8bit
 .venv/bin/python scripts/build_app.py --output build/Humanizer.app
-.venv/bin/python scripts/install.py --app build/Humanizer.app --model build/humanizer-mlx-8bit --move-model
+.venv/bin/python scripts/install.py \
+  --app build/Humanizer.app --model build/humanizer-mlx-8bit \
+  --move-model --skip-codex-plugin
 ```
 
-The installer uses the Codex CLI bundled with `/Applications/ChatGPT.app` when available; pass `--codex /absolute/path/to/codex` for another installation. It registers the local `humanizer-local` marketplace and installs `humanizer@humanizer-local` with Codex's plugin commands.
+The installer opens Humanizer and loads the model. The app is built locally and ad-hoc signed. Wait until its menu says **Ready**, then connect your client below. Downloading and converting the model can take several minutes.
 
-Installed locations:
+`--move-model` avoids keeping a second copy of the converted weights. After a successful installation, you can remove `build/source-model` to reclaim the space used by the original weights. Keep the installed model directory.
 
-| Item | Location |
+| Item | Installed location |
 | --- | --- |
 | Menu app and Python source | `~/Applications/Humanizer.app` |
 | Runtime, model, settings, logs | `~/Library/Application Support/Humanizer/` |
-| Local plugin marketplace | `~/Library/Application Support/Humanizer/marketplace/` |
-| Command line interface | `~/Library/Application Support/Humanizer/bin/humanizer` |
+| MCP launcher | `~/Library/Application Support/Humanizer/bin/humanizer-mcp` |
+| Control CLI | `~/Library/Application Support/Humanizer/bin/humanizer` |
+| Codex plugin marketplace | `~/Library/Application Support/Humanizer/marketplace/` |
 
-`--move-model` avoids another copy of the converted weights. After installation and verification, the downloaded source weights in `build/source-model` can be removed. Existing settings are preserved; the installer refuses to overwrite an existing app bundle.
+## Connect your client
 
-For an upgrade, quit Humanizer, move the old app bundle aside, rebuild, and run the installer with the existing model directory as `--model`. Keep `settings.json` to retain the On/Off preference.
+Choose one registration method per client. An MCP connection supplies tools; the paired skill supplies the rules about when to use them. The Codex plugin installs both. Manual MCP and `mcp-add` setups need the skill installed separately.
 
-## Tools and copy contract
+### Codex plugin
 
-The MCP exposes only `humanizer_status` and `humanize_copy`. It has no tool for changing the user's switch.
+Use a recent Codex version with plugin support:
+
+```sh
+codex plugin marketplace add "$HOME/Library/Application Support/Humanizer/marketplace"
+codex plugin add humanizer@humanizer-local
+```
+
+If the Codex desktop app bundles a newer CLI than your shell, use that CLI for these commands. The verified desktop build placed it at `/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex`. Start a new chat after installation; restart the desktop app if the plugin is not listed.
+
+You can also omit `--skip-codex-plugin` during service installation to register the plugin automatically. Pass `--codex /absolute/path/to/codex` to select a CLI.
+
+### Codex with `mcp add`
+
+Use this route if your Codex supports MCP and skills but does not have plugin commands. Do not also install the plugin.
+
+```sh
+codex mcp add humanizer -- "$HOME/Library/Application Support/Humanizer/bin/humanizer-mcp"
+mkdir -p "$HOME/.agents/skills/humanize-copy"
+cp plugin/skills/humanize-copy/SKILL.md "$HOME/.agents/skills/humanize-copy/SKILL.md"
+codex mcp list
+```
+
+The MCP configuration is shared by Codex CLI and the desktop app. See the [Codex MCP documentation](https://learn.chatgpt.com/docs/extend/mcp).
+
+### Claude Code
+
+Run from the cloned repository:
+
+```sh
+claude mcp add --scope user --transport stdio humanizer -- \
+  "$HOME/Library/Application Support/Humanizer/bin/humanizer-mcp"
+mkdir -p "$HOME/.claude/skills/humanize-copy"
+cp plugin/skills/humanize-copy/SKILL.md "$HOME/.claude/skills/humanize-copy/SKILL.md"
+claude mcp list
+```
+
+Start a new session. Claude Code can select the skill automatically, or you can invoke `/humanize-copy` when drafting copy. See Claude Code's [MCP](https://code.claude.com/docs/en/mcp) and [skills](https://code.claude.com/docs/en/skills) documentation.
+
+### Claude Desktop
+
+For tools in Claude Desktop, merge this entry into `~/Library/Application Support/Claude/claude_desktop_config.json` and restart Claude. Preserve any existing servers.
+
+```json
+{
+  "mcpServers": {
+    "humanizer": {
+      "command": "sh",
+      "args": ["-c", "exec \"$HOME/Library/Application Support/Humanizer/bin/humanizer-mcp\""]
+    }
+  }
+}
+```
+
+This registers tools only. The Claude Code skill directory is not a Claude Desktop skill installer. Add the copy policy to your project's instructions or explicitly ask Claude to use `humanize_copy` on audience-facing drafts. See the [local MCP server guide](https://modelcontextprotocol.io/docs/develop/connect-local-servers).
+
+### OpenCode
+
+Merge this into `~/.config/opencode/opencode.json`, preserving existing settings:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "humanizer": {
+      "type": "local",
+      "command": ["sh", "-c", "exec \"$HOME/Library/Application Support/Humanizer/bin/humanizer-mcp\""],
+      "enabled": true,
+      "timeout": 15000
+    }
+  }
+}
+```
+
+Then install the skill and check the connection:
+
+```sh
+mkdir -p "$HOME/.config/opencode/skills/humanize-copy"
+cp plugin/skills/humanize-copy/SKILL.md "$HOME/.config/opencode/skills/humanize-copy/SKILL.md"
+opencode mcp list
+```
+
+OpenCode also discovers skills in `~/.agents/skills` and `~/.claude/skills`. If you already installed this skill there, use that copy instead of duplicating it. See OpenCode's [MCP](https://opencode.ai/docs/mcp-servers/) and [skills](https://opencode.ai/docs/skills/) documentation.
+
+### Register with `mcp-add`
+
+After installing the local service, you can use [mcp-add](https://github.com/paoloricciuti/mcp-add) to register it in several clients at once. This requires Node.js and npm.
+
+```sh
+npx -y mcp-add@0.2.4 \
+  --name humanizer --type stdio \
+  --command 'sh -c "$HUMANIZER_MCP"' \
+  --env "HUMANIZER_MCP=$HOME/Library/Application Support/Humanizer/bin/humanizer-mcp" \
+  --scope global --clients 'codex,claude code,opencode'
+```
+
+Keep the quoting as shown. This version of `mcp-add` splits the command on whitespace; the environment variable preserves the launcher's path with spaces. Remove any clients you do not use. Exclude `codex` if you installed the Codex plugin.
+
+`mcp-add` only writes MCP configuration. It does not install the service, download the model, or install the skill. Follow the skill-copy step for each client above. The documented command was verified with disposable Claude Code and OpenCode configurations; the Codex TOML writer was checked in the package source.
+
+## Use Humanizer
+
+Open **Humanizer.app** and click its text-bubble menu bar icon. Opening the running app again also shows the menu.
+
+- **Enabled:** load the model once and reuse it. Requests from separate clients and chats share a queue and worker.
+- **Disabled:** cancel active and queued rewrites, terminate the worker, and release its model memory. The small menu app and controller remain running.
+- **Quit Humanizer:** disable it and quit. A later MCP connection can reopen the app, but the saved Off preference stays Off.
+
+The switch controls all clients. An agent's MCP tools cannot turn it on. Disabling it lets tasks continue with their original drafts. No login item is installed. No battery-life measurements have been made.
+
+Try a prompt such as:
+
+> Build a settings page with a friendly empty state and confirmation messages. Use Humanizer for the app copy.
+
+Or:
+
+> Draft a short message asking a teammate to review this proposal. Run Humanizer before giving me the draft.
+
+The agent drafts the copy, calls the tool, reviews the result, and inserts the accepted text. Check the tool activity to confirm it ran. A rewrite still needs review for meaning and tone, especially for short interface labels.
+
+### CLI
+
+```sh
+"$HOME/Library/Application Support/Humanizer/bin/humanizer" status
+"$HOME/Library/Application Support/Humanizer/bin/humanizer" off
+"$HOME/Library/Application Support/Humanizer/bin/humanizer" on
+printf '%s' 'You can use Collections to organize documents.' | \
+  "$HOME/Library/Application Support/Humanizer/bin/humanizer" rewrite --preserve Collections
+```
+
+The CLI is a local user control and can change the switch. MCP exposes only `humanizer_status` and `humanize_copy`.
+
+## Copy contract
+
+Example arguments for `humanize_copy`:
 
 ```json
 {
@@ -67,62 +200,64 @@ The MCP exposes only `humanizer_status` and `humanize_copy`. It has no tool for 
 }
 ```
 
-Submit up to 16 fields per call, with unique IDs, and keep each call around 300 words total. Longer documents should be split at paragraph boundaries. The MCP adapter allows 45 seconds for a request, below Codex's usual tool timeout; disconnecting cancels the underlying work. `preserve` entries must appear in the draft. Use plain fields for interface strings and headings; Markdown mode rewrites prose while keeping headings, tables, quoted blocks, and code intact. Send actual copy, not JSX, HTML, or localization source files.
+Submit up to 16 fields per call with unique IDs, and keep each call around 300 words total. Split longer documents at paragraph boundaries. The MCP adapter allows 45 seconds per request; disconnecting cancels the underlying work.
 
-Selected literal checks protect numbers, percentages, URLs, inline code, placeholders, quotations, and explicitly preserved terms. Truncation, a changed protected literal, or an exceeded character limit retains the entire original field with a warning. These checks cannot prove that meaning, claims, tone, or all units are unchanged. Codex must review accepted rewrites.
+Use plain fields for interface strings and headings. Markdown mode rewrites prose while preserving headings, tables, quoted blocks, and code. Send the copy itself, not JSX, HTML, or localization source files. Every `preserve` term must appear in the draft.
 
-Disabled, unavailable, failed, or timed-out calls return original drafts. The skill prohibits retries while disabled and prohibits claiming that an unprocessed draft was humanized. A failed model request does not prevent Codex from finishing the user's task.
+Checks protect selected numbers, percentages, URLs, inline code, placeholders, quotations, and explicitly preserved terms. A changed protected literal, truncated output, or exceeded character limit retains the entire original field with a warning. These checks cannot establish that meaning, claims, tone, or all units are unchanged. The agent must review each rewrite.
 
-### CLI
+Disabled, unavailable, failed, and timed-out calls return original drafts. The skill forbids retries while disabled and forbids claiming an unprocessed draft was humanized.
 
-```sh
-"$HOME/Library/Application Support/Humanizer/bin/humanizer" status
-"$HOME/Library/Application Support/Humanizer/bin/humanizer" off
-"$HOME/Library/Application Support/Humanizer/bin/humanizer" on
-printf '%s' 'You can utilize Collections to organize documents.' | \
-  "$HOME/Library/Application Support/Humanizer/bin/humanizer" rewrite --preserve Collections
-```
-
-The CLI is a local user control and can change the switch. MCP tools cannot.
-
-## How it works
+## Architecture and privacy
 
 ```text
-Codex skill → stdio MCP adapter ─┐
-Codex in another chat ──────────┼→ private Unix socket → controller → one MLX worker
+Agent skill + stdio MCP adapter ─┐
+Another client's MCP adapter ───┼→ private Unix socket → controller → one MLX worker
 Native menu app ────────────────┘                       On / Off      resident weights
 ```
 
-The native app owns the controller. The controller owns a separate inference process so Off can terminate it even during generation; this also releases MLX/Metal allocations. A lock prevents duplicate controllers. Parent watchdogs stop orphaned workers after an unexpected app or controller exit. The controller serializes model requests, cancels work on caller disconnect, and imposes load and request timeouts.
+The native app owns the controller. The controller serializes requests through a separate inference process. Off can terminate that process during generation and release its MLX/Metal allocations. Locks prevent duplicate controllers; parent watchdogs stop orphaned workers. Load and request timeouts bound failures.
 
-The socket is accessible only to the current user. Inference runs offline, with Hugging Face offline mode enabled. Drafts travel through local pipes and a Unix socket; the service does not write them to logs. Codex itself still receives the draft and tool result as part of its conversation.
+Inference runs locally with Hugging Face offline mode enabled. The socket is accessible only to the current user. Drafts travel through local pipes and the socket; the service does not write them to logs. Your agent still receives the draft and tool result, so its own cloud and retention settings apply.
 
-The plugin contains `plugin.json`, `mcp.json`, and `skills/humanize-copy/`. Installing that bundle supplies both the tools and their usage instructions. It does not depend on the MCP server dynamically installing a skill or editing global `AGENTS.md` files.
+MCP does not automatically install the paired skill. The Codex plugin bundles `plugin.json`, `mcp.json`, and `skills/humanize-copy/`; the other installation methods copy the skill separately. No global `AGENTS.md` is modified.
 
-### Model and upstream compatibility
+### Model and upstream
 
-- Model: [`jialinyyzz/humanizer`](https://huggingface.co/jialinyyzz/humanizer), pinned to `7232532cb8466bd393544e97826e12e6b5e471ac`.
-- Runner reference: [`sgaofen/humanizer-local-model`](https://github.com/sgaofen/humanizer-local-model), pinned to `d4f11a8e52a4c668951b0eece6a97f755d0e43bd`.
-- Local format: MLX 8-bit, group size 64, converted once from the pinned weights.
-- Prompt: upstream raw completion format, without a chat template. Fingerprint: `cc51d66b4c593fbe`.
-- Sampling: temperature 1.0, top-p 0.95, no top-k or min-p filtering; EOS termination, capped output and context budgets.
-- Chunking and Markdown planning: vendored upstream `hz_text.py`, with its license and notice.
+- Model: [`jialinyyzz/humanizer`](https://huggingface.co/jialinyyzz/humanizer), revision `7232532cb8466bd393544e97826e12e6b5e471ac`.
+- Runner reference: [`sgaofen/humanizer-local-model`](https://github.com/sgaofen/humanizer-local-model), revision `d4f11a8e52a4c668951b0eece6a97f755d0e43bd`.
+- MLX 8-bit weights, group size 64, converted once from the pinned revision.
+- Upstream raw completion prompt without a chat template; fingerprint `cc51d66b4c593fbe`.
+- Temperature 1.0, top-p 0.95, no top-k or min-p filtering, with EOS termination and output/context limits.
+- Upstream `hz_text.py` is vendored for chunking and Markdown planning, with its license and notice.
 
-The selected revision is pinned for reproducibility. See [NOTICE](NOTICE) for attribution.
+See [LICENSE](LICENSE) and [NOTICE](NOTICE) for licensing and attribution. The model has its own accompanying license and notice; preparation retains those files when supplied upstream.
 
-## Development and verification
+## Development
 
 ```sh
 .venv/bin/ruff check src scripts tests
 .venv/bin/pytest -q
+.venv/bin/python scripts/build_app.py --output build/Humanizer.app
 ```
 
-Tests cover preservation and fallback behavior, concurrent callers, cancellation, Off-state persistence, worker crashes, timeouts, Unix-socket handling, and the actual stdio MCP discovery/call protocol. Lifecycle tests use a small fake worker and do not require downloading weights. On macOS, run them in a context that permits local Unix sockets.
+The locked environment includes the test tools. Tests cover preservation, fallbacks, concurrency, cancellation, Off persistence, crashes, timeouts, installation without Codex, and stdio MCP discovery/calls. They use a fake worker and do not download weights. Unix socket access is required.
 
-The native app is built locally and ad-hoc signed. Distributing it to other Macs would also require a packaging and signing/notarization workflow.
+See [VERIFICATION.md](VERIFICATION.md) for real-model results and the limits of testing. Prebuilt notarized binaries and a signed release installer are not provided.
 
-## Troubleshooting and removal
+## Upgrade, troubleshoot, or remove
 
-Use **Open Logs…** in the menu to open the support directory. `controller.log` records startup problems; `worker.log` records model-loading errors. A missing runtime, incomplete conversion, or incompatible MLX version will appear there. Reopen the app after fixing a controller startup failure. Toggle Off then On after a worker load failure.
+For an upgrade, quit Humanizer, move the old app bundle aside, pull the source, rebuild, and rerun the installer with the existing model:
 
-To remove the integration, quit Humanizer and uninstall `humanizer@humanizer-local` through Codex's plugin settings or `codex plugin remove humanizer@humanizer-local`. Move `~/Applications/Humanizer.app` and `~/Library/Application Support/Humanizer` to Trash. The latter contains the model and all Humanizer settings; keep it if you plan to reinstall.
+```sh
+.venv/bin/python scripts/install.py \
+  --app build/Humanizer.app \
+  --model "$HOME/Library/Application Support/Humanizer/models/humanizer-mlx-8bit" \
+  --skip-codex-plugin
+```
+
+Existing settings are preserved. If using the Codex plugin, refresh or reinstall it through Codex after an update to the bundled skill. For manual skill installations, repeat the copy step.
+
+Use **Open Logs…** to open the support directory. `controller.log` records startup failures and `worker.log` records model-loading errors. Reopen the app after fixing a controller startup problem. Toggle Off then On after a model-loading failure. If the menu says Ready but a client cannot connect, check its MCP registration and restart that client.
+
+To remove Humanizer, quit the app and remove its registration from each client. For Codex plugins, use plugin settings or `codex plugin remove humanizer@humanizer-local`; for manual registrations, use `codex mcp remove humanizer` or `claude mcp remove --scope user humanizer`. Remove the OpenCode entry from its config. Remove any manually copied `humanize-copy` skill directories. Move `~/Applications/Humanizer.app` and `~/Library/Application Support/Humanizer` to Trash. The support directory contains the model and settings; keep it if you plan to reinstall.

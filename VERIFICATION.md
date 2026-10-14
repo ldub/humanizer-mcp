@@ -1,10 +1,10 @@
-# Verification — 2026-10-13
+# Verification, 2026-10-13
 
 Built and installed locally on Apple M4 Max, 128 GB unified memory, macOS 26, Python 3.12.8, MLX 0.32.3, mlx-lm 0.32.0, and MCP SDK 1.30.0. Codex discovery used the desktop-bundled CLI, version 0.162.0-alpha.17.2.
 
 ## Confirmed
 
-- 22 automated tests passed; Ruff and the Codex skill validator passed.
+- 24 automated tests passed; Ruff and the Codex skill validator passed. Installer tests cover installation without Codex and preservation of the Off preference.
 - Native AppKit app compiled successfully. The installed app passes `codesign --verify --deep --strict` after controller startup and real MCP inference. Python bytecode caching is disabled inside the signed bundle.
 - Codex discovered the enabled `humanizer:humanize-copy` skill, attributed to `humanizer@humanizer-local`.
 - Codex discovered the `humanizer_status` and `humanize_copy` MCP tools with no tool-discovery error.
@@ -14,6 +14,9 @@ Built and installed locally on Apple M4 Max, 128 GB unified memory, macOS 26, Py
 - Off interrupted a real long rewrite and its queued sibling. Both callers received their original drafts with `disabled` status. The worker process exited, and reported model allocation dropped to zero.
 - A new MCP client reopened a stopped app while preserving its saved Off preference. No worker loaded until explicitly enabled through the local control interface.
 - Humanizer was left enabled and ready after verification.
+- The installed menu was captured in Ready and Off states using native macOS window screenshots. Reopening the app shows its menu. Its open menu updates when the worker loads or unloads.
+- The runtime was reinstalled with `--skip-codex-plugin`, reusing the prepared model and preserving settings.
+- Published `mcp-add@0.2.4` generated disposable Claude Code and OpenCode configurations. Both launched the real server, discovered both tools, and reported the same resident worker. The environment-variable launcher handles spaces in the installed path.
 
 ## Measurements from the final smoke test
 
@@ -36,7 +39,9 @@ The menu labels were also submitted for review. Overlong candidates were retaine
 
 ## Limits of verification
 
-The UI automation service could inspect normal apps but timed out when targeting this menu-only app. Its actual rendered menu and mouse clicks were not visually verified. The native app's startup, controller ownership, the same enable/disable actions used by the menu, and MCP relaunch behavior were verified through the local service.
+Native screenshots verify menu rendering and live state changes. Enable/disable behavior was exercised through the same controller interface the menu uses. Physical mouse clicks were not automated because macOS denied the shell's Accessibility access.
+
+The Claude Code and OpenCode connection checks used their generated configurations with the MCP SDK. Full agent sessions and automatic skill selection in those clients were not tested. Claude Desktop configuration follows the official local-server guide but was not tested in the desktop client. The `mcp-add` Codex TOML writer was inspected in source; the user's existing Codex registration was not replaced by that utility.
 
 Implicit skill selection is instruction-driven and may occasionally be missed. It is not a mandatory response interception hook. Start a fresh Codex chat after installation; restart the desktop app if the new plugin is not listed.
 
